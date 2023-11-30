@@ -9,7 +9,7 @@
     "web": "expo start --web",
     "eject": "expo eject",
     "android-apk-mac": "cd android && ./gradlew app:assembleRelease && open app/release && cd ../../../",
-    "android-release": "cd android && ./gradlew app:installRelease",
+    "android-release": "cd android && ./gradlew app:installRelease && cd ..",
     "android-debug": "sh ./launchMetro.sh && cd android && ./gradlew app:installDebug && $(pwd)/launchAppAfteInstall.sh"
   },
   "dependencies": {
