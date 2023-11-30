@@ -10,7 +10,7 @@
     "eject": "expo eject",
     "android-apk-mac": "cd android && ./gradlew app:assembleRelease && open app/release && cd ../../../",
     "android-release": "cd android && ./gradlew app:installRelease",
-    "android-debug": "cd android && ./gradlew app:installDebug"
+    "android-debug": "sh ./launchMetro.sh && cd android && ./gradlew app:installDebug && $(pwd)/launchAppAfteInstall.sh"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.18.2",
