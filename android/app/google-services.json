@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "223634938268",
+    "project_id": "psa-dev-v3",
+    "storage_bucket": "psa-dev-v3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:223634938268:android:32dbfafa5db802cb0b9059",
+        "android_client_info": {
+          "package_name": "com.abidrazaa.EasyBuy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4j1rL8JHtRHsG-vc5jE4GqGDlotNlQPI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

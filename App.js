@@ -1,27 +1,28 @@
+import React from "react";
 import Routes from "./routes/Routes";
 import { Provider } from "react-redux";
 import { store } from "./states/store";
-import { Platform } from 'react-native';
-import { createTracker } from '@snowplow/react-native-tracker';
+import { Platform } from "react-native";
+import { createTracker } from "@snowplow/react-native-tracker";
+import { requestFCMPermissionAndToken } from "./firebase/app";
 
 export default function App() {
   console.reportErrorsAsExceptions = false;
-  var COLLECTOR_URL = 'https://orga.proemsportsanalytics.com';
+  var COLLECTOR_URL = "https://orga.proemsportsanalytics.com";
   const tracker = createTracker(
-    'appTracker',
+    "appTracker",
     {
       endpoint: COLLECTOR_URL,
-      method: 'post',
-      customPostPath: 'com.snowplowanalytics.snowplow/tp2', // A custom path which will be added to the endpoint URL to specify the complete URL of the collector when paired with the POST method.
-      requestHeaders: {} // Custom headers for HTTP requests to the Collector
-    }
-    ,
+      method: "post",
+      customPostPath: "com.snowplowanalytics.snowplow/tp2", // A custom path which will be added to the endpoint URL to specify the complete URL of the collector when paired with the POST method.
+      requestHeaders: {}, // Custom headers for HTTP requests to the Collector
+    },
     {
       trackerConfig: {
-        appId: Platform.OS === 'ios' ? 'ecomm-ios' : "ecomm-android",
-        devicePlatform: 'mob',
+        appId: Platform.OS === "ios" ? "ecomm-ios" : "ecomm-android",
+        devicePlatform: "mob",
         base64Encoding: true,
-        logLevel: 'off',
+        logLevel: "off",
         applicationContext: true,
         platformContext: true,
         geoLocationContext: false,
@@ -33,10 +34,20 @@ export default function App() {
         installAutotracking: true,
         exceptionAutotracking: true,
         diagnosticAutotracking: false,
-        userAnonymisation: false // Whether to anonymise client-side user identifiers in session and platform context entities
-      }
+        userAnonymisation: false, // Whether to anonymise client-side user identifiers in session and platform context entities
+      },
     }
   );
+
+  React.useEffect(() => {
+    (async () => {
+      const fcmToken = await requestFCMPermissionAndToken();
+      console.log("TOKEN", fcmToken);
+      if (fcmToken) {
+        // add handler
+      }
+    })();
+  }, []);
 
   return (
     <Provider store={store}>
