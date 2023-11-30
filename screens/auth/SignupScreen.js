@@ -16,6 +16,8 @@ import CustomButton from "../../components/CustomButton";
 import { Ionicons } from "@expo/vector-icons";
 import CustomAlert from "../../components/CustomAlert/CustomAlert";
 import axios from "axios";
+import { createTracker } from "@snowplow/react-native-tracker";
+import ProgressDialog from "react-native-progress-dialog";
 
 const SignupScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -23,6 +25,10 @@ const SignupScreen = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  var COLLECTOR_URL = "https://orga.proemsportsanalytics.com";
+  const [isloading, setIsloading] = useState(false);
+
+
 
   var myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/json");
@@ -44,34 +50,57 @@ const SignupScreen = ({ navigation }) => {
 
   //method to post the user data to server for user signup using API call
   const signUpHandle = () => {
+    setIsloading(true);
     if (email == "") {
+      setIsloading(false)
       return setError("Please enter your email");
     }
     if (name == "") {
+      setIsloading(false)
       return setError("Please enter your name");
     }
     if (password == "") {
+      setIsloading(false)
       return setError("Please enter your password");
     }
     if (!email.includes("@")) {
+      setIsloading(false)
       return setError("Email is not valid");
     }
     if (email.length < 6) {
+      setIsloading(false)
       return setError("Email is too short");
     }
     if (password.length < 5) {
+      setIsloading(false)
       return setError("Password must be 6 characters long");
     }
     if (password != confirmPassword) {
+      setIsloading(false)
       return setError("password does not match");
     }
     axios(requestOptions) // API call
       .then((result) => {
         if (result.status==200) {
           navigation.navigate("login");
+          const tracker = createTracker("appTracker", {
+            endpoint: COLLECTOR_URL,
+            method: "post",
+            customPostPath: "com.snowplowanalytics.snowplow/tp2", // A custom path which will be added to the endpoint URL to specify the complete URL of the collector when paired with the POST method.
+            requestHeaders: {}, // Custom headers for HTTP requests to the Collector
+          },{
+            trackerConfig: {
+              appId: Platform.OS === "ios" ? "ecomm-ios" : "ecomm-android",
+            },
+          });
+          tracker.trackSelfDescribingEvent({
+            schema: "iglu:com.proemsportsanalytics/user_attributes/jsonschema/1-0-0",
+            data: { firstName: raw.name, email: raw.email },
+          });
+          setIsloading(false)
         }
       })
-      .catch((error) => console.log("error", error));
+      .catch((error) => setIsloading(false));
   };
   return (
       <KeyboardAvoidingView style={styles.container}>
@@ -90,6 +119,7 @@ const SignupScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         <ScrollView style={{ flex: 1, width: "100%" }}>
+        <ProgressDialog visible={isloading} label={"Signing up ..."} />
           <View style={styles.welconeContainer}>
             <Image style={styles.logo} source={header_logo} />
           </View>

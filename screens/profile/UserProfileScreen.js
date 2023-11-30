@@ -11,10 +11,12 @@ import { Ionicons } from "@expo/vector-icons";
 import OptionList from "../../components/OptionList/OptionList";
 import { colors } from "../../constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createTracker } from "@snowplow/react-native-tracker";
 
 const UserProfileScreen = ({ navigation, route }) => {
   const [userInfo, setUserInfo] = useState({});
   const { user } = route.params;
+  var COLLECTOR_URL = "https://orga.proemsportsanalytics.com";
 
   const convertToJSON = (obj) => {
     try {
@@ -78,8 +80,27 @@ const UserProfileScreen = ({ navigation, route }) => {
           Icon={Ionicons}
           iconName={"log-out"}
           onPress={async () => {
-            await AsyncStorage.removeItem("authUser");
-            navigation.replace("login");
+            try{
+
+              let user= await (AsyncStorage.getItem("authUser"));
+              const tracker = createTracker("appTracker", {
+                endpoint: COLLECTOR_URL,
+                method: "post",
+                customPostPath: "com.snowplowanalytics.snowplow/tp2", // A custom path which will be added to the endpoint URL to specify the complete URL of the collector when paired with the POST method.
+                requestHeaders: {}, // Custom headers for HTTP requests to the Collector
+              }, {
+                trackerConfig: {
+                  appId: Platform.OS === "ios" ? "ecomm-ios" : "ecomm-android",
+                },
+              });
+              tracker.trackSelfDescribingEvent({
+                schema: "iglu:com.proemsportsanalytics/logout/jsonschema/1-0-0",
+                data: { user_id: JSON.parse(user)._id },
+              });
+            }
+            catch{(e)=>console.log(e)}
+            // await AsyncStorage.removeItem("authUser");
+            // navigation.replace("login");
           }}
         />
       </View>

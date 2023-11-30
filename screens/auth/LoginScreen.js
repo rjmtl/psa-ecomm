@@ -93,21 +93,25 @@ const LoginScreen = ({ navigation }) => {
             _storeData(result.data);
             setIsloading(false);
             navigation.replace("dashboard", { authUser: result.data }); // Navigate to Admin Dashboard
+          } else {
+            _storeData(result.data);
+            setIsloading(false);
+            console.log(result.data);
+            navigation.replace("tab", { user: result.data }); // Navigate to User Dashboard
             const tracker = createTracker("appTracker", {
               endpoint: COLLECTOR_URL,
               method: "post",
               customPostPath: "com.snowplowanalytics.snowplow/tp2", // A custom path which will be added to the endpoint URL to specify the complete URL of the collector when paired with the POST method.
               requestHeaders: {}, // Custom headers for HTTP requests to the Collector
+            }, {
+              trackerConfig: {
+                appId: Platform.OS === "ios" ? "ecomm-ios" : "ecomm-android",
+              },
             });
             tracker.trackSelfDescribingEvent({
-              schema: 'iglu:com.proemsportsanalytics/login/jsonschema/1-0-0',
-              data: {user_id: String(result.data._id) ?? "failSafeId"}
-          });
-          
-          } else {
-            _storeData(result.data);
-            setIsloading(false);
-            navigation.replace("tab", { user: result.data }); // Navigate to User Dashboard
+              schema: "iglu:com.proemsportsanalytics/login/jsonschema/1-0-0",
+              data: { user_id: result.data._id },
+            });
           }
         } else {
           setIsloading(false);

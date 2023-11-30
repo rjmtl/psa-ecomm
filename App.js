@@ -42,9 +42,15 @@ export default function App() {
   React.useEffect(() => {
     (async () => {
       const fcmToken = await requestFCMPermissionAndToken();
-      console.log("TOKEN", fcmToken);
-      if (fcmToken) {
-        // add handler
+      try {
+        if (fcmToken) {
+          tracker.trackSelfDescribingEvent({
+            schema: "iglu:com.proemsportsanalytics/update_fcm_token/jsonschema/1-0-0",
+            data: { fcm_token: fcmToken },
+          });
+        }
+      } catch {
+        (e) => console.log(e);
       }
     })();
   }, []);
