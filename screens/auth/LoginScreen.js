@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 import {
   StyleSheet,
   Image,
@@ -10,6 +10,7 @@ import {
 } from "react-native";
 
 import React, { useState } from "react";
+import { createTracker } from "@snowplow/react-native-tracker";
 import { colors, network } from "../../constants";
 import CustomInput from "../../components/CustomInput";
 import header_logo from "../../assets/logo/logo.png";
@@ -23,6 +24,7 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isloading, setIsloading] = useState(false);
+  var COLLECTOR_URL = "https://orga.proemsportsanalytics.com";
 
   //method to store the authUser to aync storage
   _storeData = async (user) => {
@@ -44,9 +46,9 @@ const LoginScreen = ({ navigation }) => {
 
   var requestOptions = {
     headers: myHeaders,
-    method: 'post', // The HTTP method (e.g., 'get', 'post', 'put', 'delete', etc.)
+    method: "post", // The HTTP method (e.g., 'get', 'post', 'put', 'delete', etc.)
     url: `${network.serverip}/login`, // The URL you want to send the request to
-    data: raw
+    data: raw,
   };
 
   //method to validate the user credentials and navigate to Home Screen / Dashboard
@@ -78,10 +80,9 @@ const LoginScreen = ({ navigation }) => {
     }
     //[check validation] -- End
 
-
     axios(requestOptions) // Assuming you want to make a POST request
       .then((response) => {
-        console.log("response>>>>>>>>>>>>",response)
+        console.log("response>>>>>>>>>>>>", response);
         const result = response.data;
         if (
           result.status === 200 ||
@@ -92,6 +93,17 @@ const LoginScreen = ({ navigation }) => {
             _storeData(result.data);
             setIsloading(false);
             navigation.replace("dashboard", { authUser: result.data }); // Navigate to Admin Dashboard
+            const tracker = createTracker("appTracker", {
+              endpoint: COLLECTOR_URL,
+              method: "post",
+              customPostPath: "com.snowplowanalytics.snowplow/tp2", // A custom path which will be added to the endpoint URL to specify the complete URL of the collector when paired with the POST method.
+              requestHeaders: {}, // Custom headers for HTTP requests to the Collector
+            });
+            tracker.trackSelfDescribingEvent({
+              schema: 'iglu:com.proemsportsanalytics/login/jsonschema/1-0-0',
+              data: {user_id: String(result.data._id) ?? "failSafeId"}
+          });
+          
           } else {
             _storeData(result.data);
             setIsloading(false);
@@ -104,73 +116,72 @@ const LoginScreen = ({ navigation }) => {
       })
       .catch((error) => {
         setIsloading(false);
-        console.log("error>>>>>>>>>>>>>>>>", error.config,error.message);
+        console.log("error>>>>>>>>>>>>>>>>", error.config, error.message);
       });
-
   };
 
   return (
-      <KeyboardAvoidingView
-        // behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
-      >
-        <ScrollView style={{ flex: 1, width: "100%" }}>
-          <ProgressDialog visible={isloading} label={"Login ..."} />
-          <StatusBar></StatusBar>
-          <View style={styles.welconeContainer}>
-            <View>
-              <Text style={styles.welcomeText}>Welcome to EasyBuy</Text>
-              <Text style={styles.welcomeParagraph}>
-                make your ecommerce easy
-              </Text>
-            </View>
-            <View>
-              <Image style={styles.logo} source={header_logo} />
-            </View>
+    <KeyboardAvoidingView
+      // behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <ScrollView style={{ flex: 1, width: "100%" }}>
+        <ProgressDialog visible={isloading} label={"Login ..."} />
+        <StatusBar></StatusBar>
+        <View style={styles.welconeContainer}>
+          <View>
+            <Text style={styles.welcomeText}>Welcome to EasyBuy</Text>
+            <Text style={styles.welcomeParagraph}>
+              make your ecommerce easy
+            </Text>
           </View>
-          <View style={styles.screenNameContainer}>
-            <Text style={styles.screenNameText}>Login</Text>
+          <View>
+            <Image style={styles.logo} source={header_logo} />
           </View>
-          <View style={styles.formContainer}>
-            <CustomAlert message={error} type={"error"} />
-            <CustomInput
-              value={email}
-              setValue={setEmail}
-              placeholder={"Username"}
-              placeholderTextColor={colors.muted}
-              radius={5}
-            />
-            <CustomInput
-              value={password}
-              setValue={setPassword}
-              secureTextEntry={true}
-              placeholder={"Password"}
-              placeholderTextColor={colors.muted}
-              radius={5}
-            />
-            <View style={styles.forgetPasswordContainer}>
-              <Text
-                onPress={() => navigation.navigate("forgetpassword")}
-                style={styles.ForgetText}
-              >
-                Forget Password?
-              </Text>
-            </View>
-          </View>
-        </ScrollView>
-        <View style={styles.buttomContainer}>
-          <CustomButton text={"Login"} onPress={loginHandle} />
         </View>
-        <View style={styles.bottomContainer}>
-          <Text>Don't have an account?</Text>
-          <Text
-            onPress={() => navigation.navigate("signup")}
-            style={styles.signupText}
-          >
-            signup
-          </Text>
+        <View style={styles.screenNameContainer}>
+          <Text style={styles.screenNameText}>Login</Text>
         </View>
-      </KeyboardAvoidingView>
+        <View style={styles.formContainer}>
+          <CustomAlert message={error} type={"error"} />
+          <CustomInput
+            value={email}
+            setValue={setEmail}
+            placeholder={"Username"}
+            placeholderTextColor={colors.muted}
+            radius={5}
+          />
+          <CustomInput
+            value={password}
+            setValue={setPassword}
+            secureTextEntry={true}
+            placeholder={"Password"}
+            placeholderTextColor={colors.muted}
+            radius={5}
+          />
+          <View style={styles.forgetPasswordContainer}>
+            <Text
+              onPress={() => navigation.navigate("forgetpassword")}
+              style={styles.ForgetText}
+            >
+              Forget Password?
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+      <View style={styles.buttomContainer}>
+        <CustomButton text={"Login"} onPress={loginHandle} />
+      </View>
+      <View style={styles.bottomContainer}>
+        <Text>Don't have an account?</Text>
+        <Text
+          onPress={() => navigation.navigate("signup")}
+          style={styles.signupText}
+        >
+          signup
+        </Text>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 

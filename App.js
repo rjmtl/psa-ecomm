@@ -29,7 +29,7 @@ export default function App() {
         deepLinkContext: true,
         screenContext: true,
         screenViewAutotracking: true,
-        lifecycleAutotracking: false,
+        lifecycleAutotracking: true,
         installAutotracking: true,
         exceptionAutotracking: true,
         diagnosticAutotracking: false,
