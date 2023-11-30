@@ -9,8 +9,8 @@
     "web": "expo start --web",
     "eject": "expo eject",
     "android-apk-mac": "cd android && ./gradlew app:assembleRelease",
-    "run-release-mode": "cd android && ./gradlew app:installRelease",
-    "run-debug-mode": "cd android && ./gradlew app:installDebug"
+    "android-release": "cd android && ./gradlew app:installRelease",
+    "android-debug": "cd android && ./gradlew app:installDebug"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.18.2",
