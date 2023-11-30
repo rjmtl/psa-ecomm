@@ -8,7 +8,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "eject": "expo eject",
-    "android-apk-mac": "cd android && ./gradlew app:assembleRelease && open app/release && cd ../../../",
+    "android-apk-mac": "cd android && ./gradlew app:assembleRelease && open app/build/outputs/apk/release/ && cd ../../../../../",
     "android-release": "cd android && ./gradlew app:installRelease && cd ..",
     "android-debug": "sh ./launchMetro.sh && cd android && ./gradlew app:installDebug && $(pwd)/launchAppAfteInstall.sh"
   },
