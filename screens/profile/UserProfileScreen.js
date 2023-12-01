@@ -99,8 +99,8 @@ const UserProfileScreen = ({ navigation, route }) => {
               });
             }
             catch{(e)=>console.log(e)}
-            // await AsyncStorage.removeItem("authUser");
-            // navigation.replace("login");
+            await AsyncStorage.removeItem("authUser");
+            navigation.replace("login");
           }}
         />
       </View>
