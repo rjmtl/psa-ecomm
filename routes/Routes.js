@@ -37,7 +37,7 @@ const Routes = () => {
   const navigationRef = useNavigationContainerRef();
   const routeNameRef = React.useRef();
   var COLLECTOR_URL = "https://orga.proemsportsanalytics.com";
-  const [userId,setUserId]=useState(null);
+  const [userId,setUserId]=React.useState(null);
 
 
   const getUserId=async()=>{
@@ -74,8 +74,6 @@ const Routes = () => {
     onStateChange={async () => {
       const previousRouteName = routeNameRef.current;
       const currentRouteName = navigationRef.getCurrentRoute().name;
-      console.log(previousRouteName,"previousRouteName");
-      console.log(currentRouteName,"currentRouteName")
       const trackScreenView = (currentRouteName,previousRouteName) => {
         // Your implementation of analytics goes here!
         tracker.trackPageViewEvent({
