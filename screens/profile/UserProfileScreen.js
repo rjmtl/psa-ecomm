@@ -98,13 +98,11 @@ const UserProfileScreen = ({ navigation, route }) => {
                 requestHeaders: {}, // Custom headers for HTTP requests to the Collector
               },
               {
-                subjectConfig: {
-                  userId: userId ?? null,
-                },
-              },
-              {
                 trackerConfig: {
                   appId: Platform.OS === "ios" ? "ecomm-ios" : "ecomm-android",
+                },
+                subjectConfig:{
+                  userId: userId ?? null,
                 },
               });
               tracker.trackSelfDescribingEvent({

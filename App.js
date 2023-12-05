@@ -9,14 +9,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function App() {
   console.reportErrorsAsExceptions = false;
-  const [userId,setUserId]=React.useState(null);
+  const [userId, setUserId] = React.useState(null);
   var COLLECTOR_URL = "https://orga.proemsportsanalytics.com";
-  
-  const getUserId=async()=>{
-    let user = await(AsyncStorage.getItem("authUser"));
-    let userId= JSON?.parse(user)?._id;
-    setUserId(userId)
-  }
+
+  const getUserId = async () => {
+    let user = await AsyncStorage.getItem("authUser");
+    let userId = JSON?.parse(user)?._id;
+    setUserId(userId);
+  };
   const tracker = createTracker(
     "appTracker",
     {
@@ -24,11 +24,6 @@ export default function App() {
       method: "post",
       customPostPath: "com.snowplowanalytics.snowplow/tp2", // A custom path which will be added to the endpoint URL to specify the complete URL of the collector when paired with the POST method.
       requestHeaders: {}, // Custom headers for HTTP requests to the Collector
-    },
-    {
-      subjectConfig: {
-        userId: userId ?? null,
-      },
     },
     {
       trackerConfig: {
@@ -49,9 +44,15 @@ export default function App() {
         diagnosticAutotracking: false,
         userAnonymisation: false, // Whether to anonymise client-side user identifiers in session and platform context entities
       },
+      subjectConfig: {
+        userId: userId ?? null,
+      },
+      sessionConfig: {
+        foregroundTimeout: 300, // seconds
+        backgroundTimeout: 300, //seconds
+      },
     }
   );
-
 
   React.useEffect(() => {
     (async () => {
@@ -68,7 +69,7 @@ export default function App() {
         (e) => console.log(e);
       }
     })();
-    getUserId()
+    getUserId();
   }, []);
 
   return (
