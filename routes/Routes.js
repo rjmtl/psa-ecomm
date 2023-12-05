@@ -30,6 +30,7 @@ import {
   useNavigationContainerRef,
 } from '@react-navigation/native';
 import { createTracker } from "@snowplow/react-native-tracker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Stack = createNativeStackNavigator();
 
@@ -38,8 +39,6 @@ const Routes = () => {
   const routeNameRef = React.useRef();
   var COLLECTOR_URL = "https://orga.proemsportsanalytics.com";
   const [userId,setUserId]=React.useState(null);
-
-
   const getUserId=async()=>{
     let user = await(AsyncStorage.getItem("authUser"));
     let userId= JSON?.parse(user)?._id;
