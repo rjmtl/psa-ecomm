@@ -16,6 +16,7 @@ import { createTracker } from "@snowplow/react-native-tracker";
 const UserProfileScreen = ({ navigation, route }) => {
   const [userInfo, setUserInfo] = useState({});
   const { user } = route.params;
+  const [userId,setUserId]=useState(null);
   var COLLECTOR_URL = "https://orga.proemsportsanalytics.com";
 
   const convertToJSON = (obj) => {
@@ -26,9 +27,16 @@ const UserProfileScreen = ({ navigation, route }) => {
     }
   };
 
+  const getUserId=async()=>{
+    let user = await(AsyncStorage.getItem("authUser"));
+    let userId= JSON?.parse(user)?._id;
+    setUserId(userId)
+  }
+
   // covert  the user to Json object on initial render
   useEffect(() => {
     convertToJSON(user);
+    getUserId();
   }, []);
   return (
     <View style={styles.container}>
@@ -88,7 +96,13 @@ const UserProfileScreen = ({ navigation, route }) => {
                 method: "post",
                 customPostPath: "com.snowplowanalytics.snowplow/tp2", // A custom path which will be added to the endpoint URL to specify the complete URL of the collector when paired with the POST method.
                 requestHeaders: {}, // Custom headers for HTTP requests to the Collector
-              }, {
+              },
+              {
+                subjectConfig: {
+                  userId: userId ?? null,
+                },
+              },
+              {
                 trackerConfig: {
                   appId: Platform.OS === "ios" ? "ecomm-ios" : "ecomm-android",
                 },

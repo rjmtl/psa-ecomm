@@ -5,10 +5,18 @@ import { store } from "./states/store";
 import { Platform } from "react-native";
 import { createTracker } from "@snowplow/react-native-tracker";
 import { requestFCMPermissionAndToken } from "./firebase/app";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function App() {
   console.reportErrorsAsExceptions = false;
+  const [userId,setUserId]=React.useState(null);
   var COLLECTOR_URL = "https://orga.proemsportsanalytics.com";
+  
+  const getUserId=async()=>{
+    let user = await(AsyncStorage.getItem("authUser"));
+    let userId= JSON?.parse(user)?._id;
+    setUserId(userId)
+  }
   const tracker = createTracker(
     "appTracker",
     {
@@ -16,6 +24,11 @@ export default function App() {
       method: "post",
       customPostPath: "com.snowplowanalytics.snowplow/tp2", // A custom path which will be added to the endpoint URL to specify the complete URL of the collector when paired with the POST method.
       requestHeaders: {}, // Custom headers for HTTP requests to the Collector
+    },
+    {
+      subjectConfig: {
+        userId: userId ?? null,
+      },
     },
     {
       trackerConfig: {
@@ -39,13 +52,15 @@ export default function App() {
     }
   );
 
+
   React.useEffect(() => {
     (async () => {
       const fcmToken = await requestFCMPermissionAndToken();
       try {
         if (fcmToken) {
           tracker.trackSelfDescribingEvent({
-            schema: "iglu:com.proemsportsanalytics/update_fcm_token/jsonschema/1-0-0",
+            schema:
+              "iglu:com.proemsportsanalytics/update_fcm_token/jsonschema/1-0-0",
             data: { fcm_token: fcmToken },
           });
         }
@@ -53,6 +68,7 @@ export default function App() {
         (e) => console.log(e);
       }
     })();
+    getUserId()
   }, []);
 
   return (
