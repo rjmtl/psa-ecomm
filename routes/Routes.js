@@ -31,62 +31,34 @@ import {
 } from '@react-navigation/native';
 import { createTracker } from "@snowplow/react-native-tracker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { requestFCMPermissionAndToken } from "../firebase/app.js";
 
 const Stack = createNativeStackNavigator();
 
-const Routes = () => {
+const Routes = ({tracker}) => {
   const navigationRef = useNavigationContainerRef();
   const routeNameRef = React.useRef();
-  var COLLECTOR_URL = "https://orga.proemsportsanalytics.com";
-  const [userId,setUserId]=React.useState(null);
-  const getUserId=async()=>{
-    let user = await(AsyncStorage.getItem("authUser"));
-    let userId= JSON?.parse(user)?._id;
-    setUserId(userId)
-  }
-
-  useEffect(()=>{
-    getUserId();
-  },[])
-
-
-  const tracker = createTracker("appTracker", {
-    endpoint: COLLECTOR_URL,
-    method: "post",
-    customPostPath: "com.snowplowanalytics.snowplow/tp2", // A custom path which will be added to the endpoint URL to specify the complete URL of the collector when paired with the POST method.
-    requestHeaders: {}, // Custom headers for HTTP requests to the Collector
-  }, {
-    trackerConfig: {
-      appId: Platform.OS === "ios" ? "ecomm-ios" : "ecomm-android",
-    },
-    subjectConfig:{
-      userId: userId ?? null
-    }
-  });
 
   return (
     <NavigationContainer
     ref={navigationRef}
     onReady={() => {
       routeNameRef.current = navigationRef.getCurrentRoute().name;
+
     }}
     onStateChange={async () => {
       const previousRouteName = routeNameRef.current;
+      let pageId=navigationRef.getCurrentRoute().key;
       const currentRouteName = navigationRef.getCurrentRoute().name;
       const trackScreenView = (currentRouteName,previousRouteName) => {
-        // Your implementation of analytics goes here!
-        tracker.trackPageViewEvent({
-          pageUrl: currentRouteName,
-          pageTitle: currentRouteName,
-          referrer: previousRouteName
-        });
+        tracker.trackScreenViewEvent({
+          name: currentRouteName,
+          previousName: previousRouteName,
+      });
       };
 
       if (previousRouteName !== currentRouteName) {
-        // Save the current route name for later comparison
         routeNameRef.current = currentRouteName;
-        
-        // Replace the line below to add the tracker from a mobile analytics SDK
         await trackScreenView(currentRouteName,previousRouteName);
       }
     }}

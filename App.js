@@ -17,6 +17,8 @@ export default function App() {
     let userId = JSON?.parse(user)?._id;
     setUserId(userId);
   };
+  
+  
   const tracker = createTracker(
     "appTracker",
     {
@@ -66,7 +68,7 @@ export default function App() {
           });
         }
       } catch {
-        (e) => console.log(e);
+        (e) => console.log("erorrr>>>>>>>>>>>>>>>>>>>.",e);
       }
     })();
     getUserId();
@@ -74,7 +76,7 @@ export default function App() {
 
   return (
     <Provider store={store}>
-      <Routes />
+      <Routes tracker={tracker}/>
     </Provider>
   );
 }
