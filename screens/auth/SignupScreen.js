@@ -95,7 +95,7 @@ const SignupScreen = ({ navigation }) => {
           });
           tracker.trackSelfDescribingEvent({
             schema: "iglu:com.proemsportsanalytics/user_attributes/jsonschema/1-0-0",
-            data: { firstName: raw.name, email: raw.email },
+            data: { firstName: raw.name, email: raw.email,pincode: "109090" },
           });
           setIsloading(false)
         }
