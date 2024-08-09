@@ -3,3 +3,4 @@ export const CART_REMOVE = "removefromcart";
 export const INCREASE_CART_ITEM_QUANTITY = "inceasequantity";
 export const DECREASE_CART_ITEM_QUANTITY = "deceasequantity";
 export const EMPTY_CART = "emptycart";
+export const UPDATE_FCM_TOKEN= "updateFcmToken"

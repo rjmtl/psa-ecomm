@@ -7,6 +7,7 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   ScrollView,
+  TouchableOpacity, Clipboard, Alert
 } from "react-native";
 
 import React, { useState } from "react";
@@ -18,6 +19,9 @@ import CustomButton from "../../components/CustomButton";
 import CustomAlert from "../../components/CustomAlert/CustomAlert";
 import ProgressDialog from "react-native-progress-dialog";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { requestFCMPermissionAndToken } from "../../firebase/app";
+import { Platform } from "react-native";
+
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -25,6 +29,76 @@ const LoginScreen = ({ navigation }) => {
   const [error, setError] = useState("");
   const [isloading, setIsloading] = useState(false);
   var COLLECTOR_URL = "https://orga.proemsportsanalytics.com";
+  const [token,setToken]=useState("");
+
+  const [userId, setUserId] = React.useState(null);
+
+  const getUserId = async () => {
+    let user = await AsyncStorage.getItem("authUser");
+    let userId = JSON?.parse(user)?._id;
+    setUserId(userId);
+  };
+  
+  const copyToClipboard = (text) => {
+    Clipboard.setString(text);
+    Alert.alert('Copied to Clipboard!', text);
+  };
+  
+  const tracker = createTracker(
+    "appTracker",
+    {
+      endpoint: COLLECTOR_URL,
+      method: "post",
+      customPostPath: "com.snowplowanalytics.snowplow/tp2", // A custom path which will be added to the endpoint URL to specify the complete URL of the collector when paired with the POST method.
+      requestHeaders: {}, // Custom headers for HTTP requests to the Collector
+    },
+    {
+      trackerConfig: {
+        appId: Platform.OS === "ios" ? "ecomm-ios" : "ecomm-android",
+        devicePlatform: "mob",
+        base64Encoding: true,
+        logLevel: "off",
+        applicationContext: true,
+        platformContext: true,
+        geoLocationContext: false,
+        sessionContext: true,
+        deepLinkContext: true,
+        screenContext: true,
+        screenViewAutotracking: true,
+        lifecycleAutotracking: true,
+        installAutotracking: true,
+        exceptionAutotracking: true,
+        diagnosticAutotracking: false,
+        userAnonymisation: false, // Whether to anonymise client-side user identifiers in session and platform context entities
+      },
+      subjectConfig: {
+        userId: userId ?? null,
+      },
+      sessionConfig: {
+        foregroundTimeout: 300, // seconds
+        backgroundTimeout: 300, //seconds
+      },
+    }
+  );
+
+  React.useEffect(() => {
+    (async () => {
+      const fcmToken = await requestFCMPermissionAndToken();
+      try {
+        if (fcmToken) {
+          setToken(fcmToken)
+          tracker.trackSelfDescribingEvent({
+            schema:
+              "iglu:com.proemsportsanalytics/update_fcm_token/jsonschema/1-0-0",
+            data: { fcm_token: fcmToken },
+          });
+        }
+      } catch {
+        (e) => console.log("erorrr>>>>>>>>>>>>>>>>>>>.",e);
+      }
+    })();
+    getUserId();
+  }, []);
 
   //method to store the authUser to aync storage
   _storeData = async (user) => {
@@ -40,9 +114,10 @@ const LoginScreen = ({ navigation }) => {
   myHeaders.append("Content-Type", "application/json");
 
   var raw = {
-    email: email,
+    email: email.toLowerCase(),
     password: password,
   };
+
 
   var requestOptions = {
     headers: myHeaders,
@@ -124,6 +199,7 @@ const LoginScreen = ({ navigation }) => {
       });
   };
 
+  console.log(`FCM token`, token)
   return (
     <KeyboardAvoidingView
       // behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -164,13 +240,24 @@ const LoginScreen = ({ navigation }) => {
             radius={5}
           />
           <View style={styles.forgetPasswordContainer}>
+            <>
             <Text
               onPress={() => navigation.navigate("forgetpassword")}
               style={styles.ForgetText}
-            >
+              >
               Forget Password?
             </Text>
+          
+              </>
           </View>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <TouchableOpacity onPress={() => copyToClipboard(token)}>
+        <Text>{token}</Text>
+        <View style={styles.screenNameContainer}>
+        <Text style={styles.screenNameText}>Tap to copy token</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
         </View>
       </ScrollView>
       <View style={styles.buttomContainer}>

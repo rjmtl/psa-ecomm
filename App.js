@@ -4,21 +4,24 @@ import { Provider } from "react-redux";
 import { store } from "./states/store";
 import { Platform } from "react-native";
 import { createTracker } from "@snowplow/react-native-tracker";
-import { requestFCMPermissionAndToken } from "./firebase/app";
+// import { getFirebase, requestFCMPermissionAndToken } from "./firebase/app";;n
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import messaging from '@react-native-firebase/messaging';
+
+
 
 export default function App() {
   console.reportErrorsAsExceptions = false;
   const [userId, setUserId] = React.useState(null);
-  var COLLECTOR_URL = "https://orga.proemsportsanalytics.com";
+  var COLLECTOR_URL = "https://bfc.proemsportsanalytics.com";
 
   const getUserId = async () => {
     let user = await AsyncStorage.getItem("authUser");
     let userId = JSON?.parse(user)?._id;
     setUserId(userId);
   };
-  
-  
+
+
   const tracker = createTracker(
     "appTracker",
     {
@@ -56,27 +59,101 @@ export default function App() {
     }
   );
 
+  // React.useEffect(() => {
+  //   (async () => {
+  //     const fcmToken = await requestFCMPermissionAndToken();
+  //     try {
+  //       if (fcmToken) {
+  //         tracker.trackSelfDescribingEvent({
+  //           schema:
+  //             "iglu:com.proemsportsanalytics/update_fcm_token/jsonschema/1-0-0",
+  //           data: { fcm_token: fcmToken },
+  //         });
+  //       }
+  //     } catch {
+  //       (e) => console.log("erorrr>>>>>>>>>>>>>>>>>>>.",e);
+  //     }
+  //   })();
+  // }, []);
+
+
   React.useEffect(() => {
-    (async () => {
-      const fcmToken = await requestFCMPermissionAndToken();
-      try {
-        if (fcmToken) {
+    messaging().setBackgroundMessageHandler(async remoteMessage => {
+      
+      console.log("recieved",remoteMessage)
+      tracker.trackSelfDescribingEvent({
+        schema: "iglu:com.proemsportsanalytics/notification_received/jsonschema/1-0-0",
+        data: {
+          psa_ma_id: remoteMessage.data.psa_ma_id ?? null,
+          psa_event_id: remoteMessage.data.psa_event_id ?? null,
+          psa_campaign_id: remoteMessage.data.psa_campaign_id ?? null,
+          userId: userId ?? null
+        },
+      });
+    });
+    const unsubscribe = messaging().onMessage(async remoteMessage => {
+      console.log("recieved",remoteMessage)
+
+      tracker.trackSelfDescribingEvent({
+        schema: "iglu:com.proemsportsanalytics/notification_received/jsonschema/1-0-0",
+        data: {
+          psa_ma_id: remoteMessage.data.psa_ma_id ?? null,
+          psa_event_id: remoteMessage.data.psa_event_id ?? null,
+          psa_campaign_id: remoteMessage.data.psa_campaign_id ?? null,
+          userId: userId ?? null
+        },
+      });
+    });
+
+    const unsubscribeOnNotificationOpened = messaging().onNotificationOpenedApp(remoteMessage => {
+      console.log("recieved",remoteMessage)
+      
+      tracker.trackSelfDescribingEvent({
+        schema: "iglu:com.proemsportsanalytics/notification_opened/jsonschema/1-0-0",
+        data: {
+          psa_ma_id: remoteMessage.data.psa_ma_id ?? null,
+          psa_event_id: remoteMessage.data.psa_event_id ?? null,
+          psa_campaign_id: remoteMessage.data.psa_campaign_id ?? null,
+          userId: userId ?? null
+        },
+      });
+      // Perform action on notification open
+    });
+
+    // Check if the app was opened by a notification when the app was in quit state
+    messaging()
+      .getInitialNotification()
+      .then(remoteMessage => {
+      console.log("recieved",remoteMessage)
+
+        console.log('opened from quit state', remoteMessage.data.psa_campaign_id, remoteMessage.data.psa_event_id, remoteMessage.data.psa_ma_id);
+        if (remoteMessage?.data) {
           tracker.trackSelfDescribingEvent({
-            schema:
-              "iglu:com.proemsportsanalytics/update_fcm_token/jsonschema/1-0-0",
-            data: { fcm_token: fcmToken },
+            schema: "iglu:com.proemsportsanalytics/notification_opened/jsonschema/1-0-0",
+            data: {
+              psa_ma_id: remoteMessage.data.psa_ma_id ?? null,
+              psa_event_id: remoteMessage.data.psa_event_id ?? null,
+              psa_campaign_id: remoteMessage.data.psa_campaign_id ?? null,
+              userId: userId ?? null
+            },
           });
+          // Handle the initial notification
         }
-      } catch {
-        (e) => console.log("erorrr>>>>>>>>>>>>>>>>>>>.",e);
-      }
-    })();
-    getUserId();
+      });
+
+    // Cleanup function
+    return () => {
+      unsubscribe();
+      unsubscribeOnNotificationOpened();
+    };
+
+
+    //   getUserId();
   }, []);
 
   return (
     <Provider store={store}>
-      <Routes tracker={tracker}/>
+      <Routes tracker={tracker} />
     </Provider>
   );
 }

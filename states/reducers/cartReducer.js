@@ -60,6 +60,11 @@ const reducer = (state = [], action) => {
         state.splice(0, state.length);
         return state;
       }
+    
+    case action,actions.UPDATE_FCM_TOKEN:{
+      state.fcmToken=action.payload;
+      return state;
+    }
 
     default:
       return state;

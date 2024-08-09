@@ -29,3 +29,9 @@ export const emptyCart = (type) => {
     dispatch({ type: actions.EMPTY_CART, payload: type });
   };
 };
+
+export const updateFCMtoken=(token)=>{
+  return (dispatch) => {
+    dispatch({ type: actions.UPDATE_FCM_TOKEN, payload: token });
+  };
+}

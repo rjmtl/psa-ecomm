@@ -1,19 +1,35 @@
 #import "AppDelegate.h"
-
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTLinkingManager.h>
+#import <Firebase.h>
+#import <UserNotifications/UserNotifications.h>
+
+@interface AppDelegate () <UNUserNotificationCenterDelegate>
+@end
 
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  self.moduleName = @"main";
+    [FIRApp configure];
+    // Set this object as the delegate for notification center.
+    [UNUserNotificationCenter currentNotificationCenter].delegate = self;
+    
+    self.moduleName = @"main";
+    self.initialProps = @{};
 
-  // You can add your custom initial props in the dictionary below.
-  // They will be passed down to the ViewController used by React Native.
-  self.initialProps = @{};
+    // Request notification permission from the user
+    [[UNUserNotificationCenter currentNotificationCenter] requestAuthorizationWithOptions:(UNAuthorizationOptionAlert | UNAuthorizationOptionSound | UNAuthorizationOptionBadge)
+                                                                        completionHandler:^(BOOL granted, NSError * _Nullable error) {
+                                                                            if (error) {
+                                                                                NSLog(@"Notification Authorization Error: %@", error);
+                                                                            }
+                                                                        }];
 
-  return [super application:application didFinishLaunchingWithOptions:launchOptions];
+    // Register for remote notifications
+    [application registerForRemoteNotifications];
+
+    return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
@@ -25,33 +41,40 @@
 #endif
 }
 
-// Linking API
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options {
-  return [super application:application openURL:url options:options] || [RCTLinkingManager application:application openURL:url options:options];
+  return [RCTLinkingManager application:application openURL:url options:options] || [super application:application openURL:url options:options];
 }
 
-// Universal Links
 - (BOOL)application:(UIApplication *)application continueUserActivity:(nonnull NSUserActivity *)userActivity restorationHandler:(nonnull void (^)(NSArray<id<UIUserActivityRestoring>> * _Nullable))restorationHandler {
-  BOOL result = [RCTLinkingManager application:application continueUserActivity:userActivity restorationHandler:restorationHandler];
-  return [super application:application continueUserActivity:userActivity restorationHandler:restorationHandler] || result;
+  return [RCTLinkingManager application:application continueUserActivity:userActivity restorationHandler:restorationHandler] || [super application:application continueUserActivity:userActivity restorationHandler:restorationHandler];
 }
 
-// Explicitly define remote notification delegates to ensure compatibility with some third-party libraries
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 {
-  return [super application:application didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
+  // Pass device token to Firebase
+  [FIRMessaging messaging].APNSToken = deviceToken;
 }
 
-// Explicitly define remote notification delegates to ensure compatibility with some third-party libraries
 - (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 {
-  return [super application:application didFailToRegisterForRemoteNotificationsWithError:error];
+  NSLog(@"Failed to register for remote notifications: %@", error);
 }
 
-// Explicitly define remote notification delegates to ensure compatibility with some third-party libraries
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo fetchCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
 {
-  return [super application:application didReceiveRemoteNotification:userInfo fetchCompletionHandler:completionHandler];
+  // Log the notification payload for debugging
+  NSLog(@"Received remote notification: %@", userInfo);
+
+  // You must call the completion handler as appropriate.
+  completionHandler(UIBackgroundFetchResultNewData);
+}
+
+// This method will be called when the app receives a notification in the foreground
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center willPresentNotification:(UNNotification *)notification withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler {
+    // Log the notification
+    NSLog(@"Foreground notification: %@", notification.request.content.userInfo);
+    // Show the notification while the app is in the foreground
+    completionHandler(UNNotificationPresentationOptionAlert | UNNotificationPresentationOptionSound | UNNotificationPresentationOptionBadge);
 }
 
 @end

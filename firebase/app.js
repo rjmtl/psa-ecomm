@@ -3,9 +3,11 @@ import messaging from "@react-native-firebase/messaging";
 
 let app;
 
+
 export const getFirebase = () => {
   if (!app) {
     app = firebase.app();
+    firebase.initializeApp();
   }
   return app;
 };
@@ -25,6 +27,7 @@ export const requestFCMPermissionAndToken = async () => {
 
     if (enabled) {
       try {
+        await messaging().registerDeviceForRemoteMessages();
         const fcmToken = await getFirebase().messaging().getToken();
         if (!fcmToken) {
           throw new Error("Failed to fetch the FCM token");
